@@ -1,0 +1,26 @@
+{
+  "name": "book-learning-platform-gpt",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "workspaces": ["client", "server"],
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MalithGihan/book-learning-platform-gpt.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/MalithGihan/book-learning-platform-gpt/issues"
+  },
+  "homepage": "https://github.com/MalithGihan/book-learning-platform-gpt#readme"
+}
