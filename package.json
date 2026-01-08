@@ -4,11 +4,17 @@
   "description": "",
   "main": "index.js",
   "private": true,
-  "workspaces": ["client", "server"],
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "directories": {
     "doc": "docs"
   },
   "scripts": {
+    "dev": "concurrently \"npm run dev -w server\" \"npm run dev -w client\"",
+    "dev:server": "npm run dev -w server",
+    "dev:client": "npm run dev -w client",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -22,5 +28,8 @@
   "bugs": {
     "url": "https://github.com/MalithGihan/book-learning-platform-gpt/issues"
   },
-  "homepage": "https://github.com/MalithGihan/book-learning-platform-gpt#readme"
+  "homepage": "https://github.com/MalithGihan/book-learning-platform-gpt#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }
