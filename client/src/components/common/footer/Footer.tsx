@@ -44,8 +44,8 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="py-6 px-2">
-      <div className="mx-auto max-w-7xl">
+    <footer className="mx-auto max-w-7xl">
+      <div className="py-6 px-4">
         <NewsletterSubscription />
 
         <div className="bg-white px-6 py-12 rounded shadow-[0_0_0_2px_rgba(0,0,0,0.08),0_0_14px_rgba(0,0,0,0.12)]">

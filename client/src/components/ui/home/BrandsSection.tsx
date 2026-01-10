@@ -21,7 +21,7 @@ export default function BrandsSection() {
     if (!container) return;
 
     let scrollPosition = 0;
-    const scrollSpeed = 0.5;
+    const scrollSpeed = 0.1;
 
     const animate = () => {
       scrollPosition += scrollSpeed;
