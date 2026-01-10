@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Moon, Sun, Languages, CircleArrowDown, Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const linkBase =
   "text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors cursor-pointer";
@@ -171,16 +172,12 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <a
-              href="/login"
-              onClick={(e) => {
-                e.preventDefault();
-                handleNavigation("/login");
-              }}
+            <Link
+              to="/login"
               className="rounded-lg px-4 py-1.5 text-sm font-medium text-slate-700 shadow-[0_0_0_2px_rgba(0,0,0,0.08),0_0_14px_rgba(0,0,0,0.12)] hover:text-black transition-colors"
             >
               Sign in
-            </a>
+            </Link>
 
             <button
               onClick={() => setIsDark(!isDark)}
