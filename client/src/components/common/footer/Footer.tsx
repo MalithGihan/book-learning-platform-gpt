@@ -44,7 +44,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="p-4">
+    <footer className="py-6 px-2">
       <div className="mx-auto max-w-7xl">
         <NewsletterSubscription />
 

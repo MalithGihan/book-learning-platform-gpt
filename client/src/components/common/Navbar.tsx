@@ -128,7 +128,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="bg-white shadow-sm">
+    <header className="sticky top-0 z-40 bg-white/60 backdrop-blur-md shadow-sm">
       <div className="mx-auto flex h-16 max-w-8xl items-center justify-between px-6">
         <a
           href="/"
