@@ -1,7 +1,10 @@
 {
   "name": "book-learning-platform-gpt",
   "private": true,
-  "workspaces": ["client", "server"],
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "scripts": {
     "dev:server": "npm run dev -w server",
     "dev:client": "npm run dev -w client"
