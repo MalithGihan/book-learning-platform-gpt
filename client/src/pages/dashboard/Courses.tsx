@@ -14,7 +14,7 @@ type CourseVM = {
 export default function Courses() {
   const nav = useNavigate();
 
-  const { data, isLoading, error } = useGetCoursesQuery();
+  const { data, isLoading, error } = useGetCoursesQuery({ viewer: "user" });
   const courses = (data ?? []) as CourseVM[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,41 +1,138 @@
-import {  NavLink } from "react-router-dom";
-import { dashboardNav } from "./dashboardNav";
-import { useAppSelector } from "../../app/hooks";
+import { Link, NavLink } from "react-router-dom";
+import type { LucideIcon } from "lucide-react";
+import {
+  Monitor,
+  BookOpen,
+  FileText,
+  Award,
+  MessageSquare,
+  Settings,
+  ChevronLeft,
+  CirclePlus,
+  BookA,
+} from "lucide-react";
 
-export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+import { dashboardNav, type Role } from "./dashboardNav";
+import { useAppSelector } from "../../app/hooks";
+import type { DashboardNavItem, DashboardSubNavItem } from "./Sidebar.types";
+
+const iconMap: Record<string, LucideIcon> = {
+  overview: Monitor,
+  courses: BookOpen,
+  certificates: Award,
+  feedback: MessageSquare,
+  settings: Settings,
+  reports: FileText,
+  myCourses: BookA
+};
+
+export default function Sidebar({
+  isCollapsed,
+  onNavigate,
+}: {
+  isCollapsed?: boolean;
+  onNavigate?: () => void;
+}) {
   const user = useAppSelector((s) => s.auth.user);
 
-  const items = dashboardNav.filter((i) =>
-    user ? i.roles.includes(user.role) : false
+  const role = (user?.role ?? null) as Role | null;
+
+  const items: DashboardNavItem[] = dashboardNav.filter((i) =>
+    role ? i.roles.includes(role) : false
+  );
+
+  const overviewItem = items.find((i) => i.label.toLowerCase() === "overview");
+  const overviewSubItems: DashboardSubNavItem[] = overviewItem?.subItems ?? [];
+  const regularItems = items.filter(
+    (i) => i.label.toLowerCase() !== "overview"
   );
 
   return (
-    <aside className="h-full w-64 border-r bg-white">
-      <div className="h-14 border-b px-4 flex items-center">
-        <a href="/" className="font-semibold text-slate-900">
-          BookLMS
-        </a>
+    <aside className="h-full flex flex-col bg-white border-r border-gray-200">
+      <div className="h-16 flex items-center justify-center border-b border-gray-200 px-4">
+        <Link to="/" className="z-50 text-lg font-bold text-gray-900">
+          {isCollapsed ? 'B' : <img src="/logo/logo.png" alt="logo" className="h-5 w-13" />}
+        </Link>
       </div>
 
-      <nav className="p-3 space-y-1">
-        {items.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              [
-                "block rounded-lg px-3 py-2 text-sm font-medium transition",
-                isActive
-                  ? "bg-slate-900 text-white"
-                  : "text-slate-700 hover:bg-slate-100",
-              ].join(" ")
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
+      <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+        {overviewItem && (
+          <div className="mb-4">
+            <NavLink
+              to={overviewItem.to}
+              end
+              onClick={onNavigate}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+              title={isCollapsed ? overviewItem.label : undefined}
+            >
+              <Monitor className="h-5 w-5 shrink-0" />
+              {!isCollapsed && <span>{overviewItem.label}</span>}
+            </NavLink>
+
+            {!isCollapsed && overviewSubItems.length > 0 && (
+              <div className="ml-6 mt-2 space-y-1 border-l-2 border-gray-200 pl-4">
+                {overviewSubItems.map((subItem) => (
+                  <NavLink
+                    key={subItem.to}
+                    to={subItem.to}
+                    onClick={onNavigate}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
+                        isActive
+                          ? "text-gray-900 font-medium"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      }`
+                    }
+                  >
+                    <CirclePlus className="h-4 w-4 shrink-0" />
+                    <span>{subItem.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {regularItems.map((item) => {
+          const Icon = iconMap[item.label.toLowerCase()];
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={onNavigate}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+              title={isCollapsed ? item.label : undefined}
+            >
+              {Icon && <Icon className="h-5 w-5 shrink-0" />}
+              {!isCollapsed && <span>{item.label}</span>}
+            </NavLink>
+          );
+        })}
       </nav>
+
+      {!isCollapsed && (
+        <div className="p-3 border-t border-gray-200">
+          <button
+            type="button"
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ChevronLeft className="h-5 w-5 shrink-0" />
+            <span>Back</span>
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

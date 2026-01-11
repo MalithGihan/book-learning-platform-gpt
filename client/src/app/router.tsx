@@ -21,7 +21,6 @@ import DashboardHome from "../pages/dashboard/DashboardHome";
 import Courses from "../pages/dashboard/Courses";
 import MyCourses from "../pages/dashboard/MyCourses";
 import ManageCourses from "../pages/dashboard/ManageCourses";
-import EditCourse from "../pages/dashboard/EditCourse";
 import MarketingCourses from "../pages/marketing/Courses";
 import Checkout from "../pages/checkout/Checkout";
 
@@ -69,7 +68,6 @@ export const router = createBrowserRouter([
                 element: <RequireRole allow={["instructor", "admin"]} />,
                 children: [
                   { path: "manage-courses", element: <ManageCourses /> },
-                  { path: "manage-courses/:id", element: <EditCourse /> },
                 ],
               },
             ],
