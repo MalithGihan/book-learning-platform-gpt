@@ -12,9 +12,10 @@ import {
   Star,
   CheckCircle2,
   ArrowRight,
-  Sparkles,
+  Sparkles
 } from "lucide-react";
 import FullScreenLoader from "../../components/common/FullScreenLoader";
+import ErrorPage from "../../components/error/error";
 
 type CourseVM = {
   _id: string;
@@ -123,7 +124,7 @@ export default function MarketingCourses() {
             {status === "authed" && (
               <Link
                 to="/dashboard"
-                className="group flex items-center gap-3 px-8 py-4 rounded-2xl bg-white text-black font-semibold hover:bg-[#4CE38F] transition-all duration-300 shadow-lg hover:shadow-[#4CE38F]/20"
+                className="group flex items-center rounded-lg px-4 py-2 bg-white text-sm font-medium text-black shadow-sm hover:shadow-md hover:text-black/80 transition-all duration-200"
               >
                 Dashboard
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -169,12 +170,9 @@ export default function MarketingCourses() {
       </div>
 
       <div className="mx-auto max-w-7xl px-6 py-8">
+
         {error && (
-          <div className="mb-8 p-6 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400">
-            <p className="font-semibold">
-              Failed to load courses. Please try again.
-            </p>
-          </div>
+          <ErrorPage />
         )}
 
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">

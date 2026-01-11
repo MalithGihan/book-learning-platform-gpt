@@ -1,4 +1,4 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import {
   Monitor,
@@ -12,18 +12,19 @@ import {
   BookA,
 } from "lucide-react";
 
-import { dashboardNav, type Role } from "./dashboardNav";
+import { type Role } from "./dashboardNav";
 import { useAppSelector } from "../../app/hooks";
-import type { DashboardNavItem, DashboardSubNavItem } from "./Sidebar.types";
+import { dashboardNav, type DashboardNavItem, type DashboardSubNavItem } from "./Sidebar.types";
 
 const iconMap: Record<string, LucideIcon> = {
   overview: Monitor,
   courses: BookOpen,
+  myCourses: BookA,
+  manageCourses: CirclePlus,
   certificates: Award,
   feedback: MessageSquare,
   settings: Settings,
   reports: FileText,
-  myCourses: BookA
 };
 
 export default function Sidebar({
@@ -34,12 +35,14 @@ export default function Sidebar({
   onNavigate?: () => void;
 }) {
   const user = useAppSelector((s) => s.auth.user);
+  const navigate = useNavigate();
 
   const role = (user?.role ?? null) as Role | null;
 
   const items: DashboardNavItem[] = dashboardNav.filter((i) =>
-    role ? i.roles.includes(role) : false
-  );
+  role ? i.roles.includes(role) : false
+);
+
 
   const overviewItem = items.find((i) => i.label.toLowerCase() === "overview");
   const overviewSubItems: DashboardSubNavItem[] = overviewItem?.subItems ?? [];
@@ -57,7 +60,7 @@ export default function Sidebar({
 
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
         {overviewItem && (
-          <div className="mb-4">
+          <div className="">
             <NavLink
               to={overviewItem.to}
               end
@@ -100,7 +103,7 @@ export default function Sidebar({
         )}
 
         {regularItems.map((item) => {
-          const Icon = iconMap[item.label.toLowerCase()];
+          const Icon = iconMap[item.icon];
           return (
             <NavLink
               key={item.to}
@@ -126,6 +129,7 @@ export default function Sidebar({
         <div className="p-3 border-t border-gray-200">
           <button
             type="button"
+            onClick={() => navigate("/")}
             className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ChevronLeft className="h-5 w-5 shrink-0" />

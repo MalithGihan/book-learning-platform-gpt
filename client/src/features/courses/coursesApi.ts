@@ -1,11 +1,28 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { api } from "../../app/api";
 
+export type CourseLevel = "beginner" | "intermediate" | "advanced";
+
 export type Course = {
   _id: string;
-  title?: string;
-  description?: string;
-  // Add your real fields later (price, category, etc.)
+  title: string;
+  description: string;
+  category?: string;
+  level: CourseLevel;
+  tags: string[];
+  price: number;
+  published: boolean;
+  enrollmentCount?: number;
+};
+
+export type CreateCourseBody = {
+  title: string;
+  description: string;
+  category?: string;
+  level: CourseLevel;
+  tags?: string[];
+  price: number;
+  published?: boolean;
 };
 
 function asCourses(resp: any): Course[] {
@@ -37,17 +54,14 @@ export const coursesApi = api.injectEndpoints({
       transformResponse: asCourse,
       providesTags: (_res, _err, id) => [{ type: "Course", id }],
     }),
-
-    createCourse: builder.mutation<Course, Partial<Course>>({
+    createCourse: builder.mutation<Course, CreateCourseBody>({
       query: (body) => ({
         url: "/courses",
         method: "POST",
         body,
       }),
-      transformResponse: asCourse,
       invalidatesTags: [{ type: "Courses", id: "LIST" }],
     }),
-
     updateCourse: builder.mutation<
       Course,
       { id: string; patch: Partial<Course> }
@@ -63,7 +77,13 @@ export const coursesApi = api.injectEndpoints({
         { type: "Courses", id: "LIST" },
       ],
     }),
-
+    getCourseById: builder.query<any, { id: string; viewer: "guest" | "user" }>(
+      {
+        query: ({ id, viewer }) => `/courses/${id}?viewer=${viewer}`,
+        transformResponse: (res: any) => res?.course ?? res,
+        providesTags: (_res, _err, arg) => [{ type: "Course", id: arg.id }],
+      }
+    ),
     deleteCourse: builder.mutation<{ ok: boolean } | any, string>({
       query: (id) => ({
         url: `/courses/${id}`,
@@ -82,5 +102,6 @@ export const {
   useGetCourseQuery,
   useCreateCourseMutation,
   useUpdateCourseMutation,
+  useGetCourseByIdQuery,
   useDeleteCourseMutation,
 } = coursesApi;

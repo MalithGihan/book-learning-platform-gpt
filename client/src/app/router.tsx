@@ -23,6 +23,7 @@ import MyCourses from "../pages/dashboard/MyCourses";
 import ManageCourses from "../pages/dashboard/ManageCourses";
 import MarketingCourses from "../pages/marketing/Courses";
 import Checkout from "../pages/checkout/Checkout";
+import CourseDetail from "../pages/dashboard/CourseDetail";
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +62,7 @@ export const router = createBrowserRouter([
                 children: [
                   { path: "courses", element: <Courses /> },
                   { path: "my-courses", element: <MyCourses /> },
+                  { path: "courses/:courseId", element: <CourseDetail /> },
                 ],
               },
 
