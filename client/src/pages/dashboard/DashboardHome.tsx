@@ -270,7 +270,7 @@ export default function DashboardHome() {
 
 function StatCard(props: { label: string; value: string }) {
   return (
-    <div className="group rounded-2xl bg-white p-4 shadow-sm transition-all ">
+    <div className="group rounded-2xl bg-white p-4 shadow-sm transition-all">
       <div className="text-xs font-semibold text-slate-500">{props.label}</div>
       <div
         className={`mt-2 text-base font-semibold ${

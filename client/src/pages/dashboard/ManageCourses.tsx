@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import {
   Plus,
   RefreshCw,
@@ -17,11 +20,14 @@ import {
 
 import {
   useGetCoursesQuery,
+  useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,
 } from "../../features/courses/coursesApi";
+
 import FullScreenLoader from "../../components/common/FullScreenLoader";
 import DashboardModal from "../../components/model/DashboardModel";
+import ErrorPage from "../../components/error/error";
 
 interface Course {
   _id: string;
@@ -69,6 +75,24 @@ function courseToForm(c: Course): CourseFormState {
   };
 }
 
+const createSchema: Yup.ObjectSchema<CourseFormState> = Yup.object({
+  title: Yup.string().trim().required("Course title is required"),
+  category: Yup.string().trim().required("Category is required"),
+  description: Yup.string()
+    .trim()
+    .min(10, "Description must be at least 10 characters")
+    .required("Description is required"),
+  level: Yup.mixed<Course["level"]>()
+    .oneOf(["beginner", "intermediate", "advanced"])
+    .required("Level is required"),
+  tagsText: Yup.string().trim().default(""),
+  price: Yup.number()
+    .typeError("Price must be a number")
+    .min(0, "Price cannot be negative")
+    .required("Price is required"),
+  published: Yup.boolean().required(),
+});
+
 export default function ManageCourses() {
   const [showCreate, setShowCreate] = useState(false);
 
@@ -91,6 +115,7 @@ export default function ManageCourses() {
     refetch: () => void;
   };
 
+  const [createCourse, { isLoading: creating }] = useCreateCourseMutation();
   const [updateCourse, { isLoading: updating }] = useUpdateCourseMutation();
   const [deleteCourse, { isLoading: deleting }] = useDeleteCourseMutation();
 
@@ -102,7 +127,6 @@ export default function ManageCourses() {
 
   const filteredCourses = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-
     return courses.filter((c) => {
       const matchesSearch =
         !q ||
@@ -112,7 +136,6 @@ export default function ManageCourses() {
         (c.tags ?? []).some((t) => t.toLowerCase().includes(q));
 
       const matchesLevel = filterLevel === "all" || c.level === filterLevel;
-
       return matchesSearch && matchesLevel;
     });
   }, [courses, searchQuery, filterLevel]);
@@ -168,14 +191,44 @@ export default function ManageCourses() {
 
   async function onConfirmDelete() {
     if (!selected) return;
-
     await deleteCourse(selected._id).unwrap();
-
     setDeleteOpen(false);
     setSelected(null);
   }
 
-  if (isLoading ) return <FullScreenLoader label="Loading ..." />;
+  const createFormik = useFormik<CourseFormState>({
+    initialValues: {
+      title: "",
+      description: "",
+      category: "",
+      level: "beginner",
+      tagsText: "",
+      price: 0,
+      published: false,
+    },
+    validationSchema: createSchema,
+    onSubmit: async (values, helpers) => {
+      try {
+        await createCourse({
+          title: values.title.trim(),
+          description: values.description.trim(),
+          category: values.category.trim(),
+          level: values.level,
+          tags: textToTags(values.tagsText),
+          price: Number(values.price) || 0,
+          published: !!values.published,
+        }).unwrap();
+
+        helpers.resetForm();
+        setShowCreate(false);
+      } catch (err: any) {
+        helpers.setStatus(err?.data?.message || "Failed to create course");
+      }
+    },
+  });
+
+  if (isLoading) return <FullScreenLoader label="Loading ..." />;
+  if (isError) return <ErrorPage />;
 
   return (
     <div className="space-y-4">
@@ -212,23 +265,131 @@ export default function ManageCourses() {
       </div>
 
       {isError && (
-        <div className="bg-white rounded-lg border border-red-200 p-6 text-sm text-red-600">
-          Failed to load courses.{" "}
-          <button className="underline" onClick={() => refetch()}>
-            Try again
-          </button>
-        </div>
+        <ErrorPage />
       )}
 
       {showCreate && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+        <form
+          onSubmit={createFormik.handleSubmit}
+          className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm"
+        >
           <h2 className="text-sm font-semibold text-gray-900 mb-3">
             Create New Course
           </h2>
-          <p className="text-xs text-gray-600">
-            (We can connect this to POST /courses next.)
-          </p>
-        </div>
+
+          {createFormik.status && (
+            <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+              {createFormik.status}
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Field
+                label="Course Title"
+                name="title"
+                formik={createFormik}
+                placeholder="Enter course title"
+              />
+              <Field
+                label="Category"
+                name="category"
+                formik={createFormik}
+                placeholder="e.g., Web Development"
+              />
+            </div>
+
+            <TextAreaField
+              label="Description"
+              name="description"
+              formik={createFormik}
+              placeholder="Brief description of your course"
+              rows={3}
+            />
+
+            <div className="grid sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Level
+                </label>
+                <select
+                  name="level"
+                  value={createFormik.values.level}
+                  onChange={createFormik.handleChange}
+                  onBlur={createFormik.handleBlur}
+                  className={`w-full px-3 py-2 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-[#4CE38F]/20 focus:border-[#4CE38F] ${
+                    hasErr(createFormik, "level") ? "border-red-300 bg-red-50" : "border-gray-200"
+                  }`}
+                >
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+                <Err formik={createFormik} name="level" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Price (LKR)
+                </label>
+                <input
+                  name="price"
+                  type="number"
+                  min={0}
+                  value={createFormik.values.price}
+                  onChange={createFormik.handleChange}
+                  onBlur={createFormik.handleBlur}
+                  className={`w-full px-3 py-2 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-[#4CE38F]/20 focus:border-[#4CE38F] ${
+                    hasErr(createFormik, "price") ? "border-red-300 bg-red-50" : "border-gray-200"
+                  }`}
+                />
+                <Err formik={createFormik} name="price" />
+              </div>
+
+              <Field
+                label="Tags"
+                name="tagsText"
+                formik={createFormik}
+                placeholder="React, JavaScript"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="published"
+                name="published"
+                checked={createFormik.values.published}
+                onChange={createFormik.handleChange}
+                className="h-4 w-4 rounded border-gray-300 text-[#4CE38F] focus:ring-[#4CE38F]/20"
+              />
+              <label htmlFor="published" className="text-xs text-gray-700">
+                Publish immediately
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreate(false);
+                  createFormik.resetForm();
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={creating || !createFormik.isValid}
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#4CE38F] rounded-lg hover:bg-[#3AB574] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {creating ? "Creating..." : "Create Course"}
+              </button>
+            </div>
+          </div>
+        </form>
       )}
 
       <div className="flex flex-col sm:flex-row gap-2">
@@ -653,3 +814,72 @@ export default function ManageCourses() {
 }
 
 
+function hasErr(formik: any, name: string) {
+  return Boolean(formik.touched?.[name] && formik.errors?.[name]);
+}
+
+function Err({ formik, name }: { formik: any; name: string }) {
+  if (!formik.touched?.[name] || !formik.errors?.[name]) return null;
+  return <p className="mt-1 text-[11px] text-red-600">{formik.errors[name]}</p>;
+}
+
+function Field({
+  label,
+  name,
+  formik,
+  placeholder,
+}: {
+  label: string;
+  name: keyof CourseFormState;
+  formik: any;
+  placeholder?: string;
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+      <input
+        name={name}
+        value={formik.values[name]}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        placeholder={placeholder}
+        className={`w-full px-3 py-2 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-[#4CE38F]/20 focus:border-[#4CE38F] ${
+          hasErr(formik, name as string) ? "border-red-300 bg-red-50" : "border-gray-200"
+        }`}
+      />
+      <Err formik={formik} name={name as string} />
+    </div>
+  );
+}
+
+function TextAreaField({
+  label,
+  name,
+  formik,
+  placeholder,
+  rows,
+}: {
+  label: string;
+  name: keyof CourseFormState;
+  formik: any;
+  placeholder?: string;
+  rows: number;
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+      <textarea
+        name={name}
+        rows={rows}
+        value={formik.values[name]}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        placeholder={placeholder}
+        className={`w-full px-3 py-2 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-[#4CE38F]/20 focus:border-[#4CE38F] resize-none ${
+          hasErr(formik, name as string) ? "border-red-300 bg-red-50" : "border-gray-200"
+        }`}
+      />
+      <Err formik={formik} name={name as string} />
+    </div>
+  );
+}
