@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "../components/dashboard/Sidebar";
 import Topbar from "../components/dashboard/Topbar";
+import RouteLoadingBar from "../components/common/RouteLoadingBar";
 
 export default function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -28,6 +29,7 @@ export default function DashboardLayout() {
         <Topbar onMenu={() => setMobileOpen(true)} />
 
         <main className="mx-auto w-full max-w-6xl px-4 py-6">
+          <RouteLoadingBar />
           <Outlet />
         </main>
       </div>

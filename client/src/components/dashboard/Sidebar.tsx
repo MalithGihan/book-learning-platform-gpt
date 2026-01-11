@@ -1,16 +1,20 @@
-import { NavLink } from "react-router-dom";
+import {  NavLink } from "react-router-dom";
 import { dashboardNav } from "./dashboardNav";
 import { useAppSelector } from "../../app/hooks";
 
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const user = useAppSelector((s) => s.auth.user);
 
-  const items = dashboardNav.filter((i) => (user ? i.roles.includes(user.role) : false));
+  const items = dashboardNav.filter((i) =>
+    user ? i.roles.includes(user.role) : false
+  );
 
   return (
     <aside className="h-full w-64 border-r bg-white">
       <div className="h-14 border-b px-4 flex items-center">
-        <span className="font-semibold text-slate-900">BookLMS</span>
+        <a href="/" className="font-semibold text-slate-900">
+          BookLMS
+        </a>
       </div>
 
       <nav className="p-3 space-y-1">
