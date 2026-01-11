@@ -2,11 +2,13 @@ import { Router } from "express";
 import authRoutes from "../modules/auth/auth.routes";
 import coursesRoutes from "../modules/courses/courses.routes";
 import enrollmentsRoutes from "../modules/enrollments/enrollments.routes";
+import aiRoutes from "./ai.routes";
 
 const routes = Router();
 
 routes.use("/auth", authRoutes);
 routes.use("/courses", coursesRoutes);
 routes.use("/enrollments", enrollmentsRoutes);
+routes.use("/ai", aiRoutes);
 
 export default routes;
