@@ -25,6 +25,12 @@ jobs:
       - name: Build server
         run: npm run build -w server
 
+      - name: Install prod deps inside server (so Lambda package includes node_modules)
+        working-directory: server
+        run: |
+          rm -rf node_modules
+          npm install --omit=dev --no-audit --no-fund --workspaces=false
+
       - name: Configure AWS creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -34,4 +40,20 @@ jobs:
 
       - name: Deploy (Serverless)
         working-directory: server
-        run: npx serverless@3 deploy
+        env:
+          CLIENT_ORIGINS: ${{ secrets.CLIENT_ORIGINS }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
+          AI_MODEL: ${{ secrets.AI_MODEL }}
+          AI_REQUEST_LIMIT: ${{ secrets.AI_REQUEST_LIMIT }}
+
+          JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+          ACCESS_MINUTES: ${{ secrets.ACCESS_MINUTES }}
+          REFRESH_DAYS: ${{ secrets.REFRESH_DAYS }}
+
+          COOKIE_SECURE: ${{ secrets.COOKIE_SECURE }}
+          COOKIE_SAMESITE: ${{ secrets.COOKIE_SAMESITE }}
+        run: npx serverless@3 deploy --force
