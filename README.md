@@ -1,38 +1,34 @@
-# Book Online Learning Platform (MERN)
+## Book Online Learning Platform (MERN)
 
 <p align="center">
   <img src="docs/cover.png" alt="Project Cover" width="900" />
 </p>
 
-<p align="center">
-  <b>Courses • Enrollment • RBAC • Secure Auth (HttpOnly Cookies)</b>
-</p>
-
 ---
 
-## 🌐 Live Demo
-- Frontend: https://YOUR-FRONTEND-DOMAIN.com  
-- Backend API: https://YOUR-BACKEND-DOMAIN.com/api/v1  
+### 🌐 Live Demo
+- Frontend: [https://booklms.com](https://production.d1vxn4a6u30p6c.amplifyapp.com/)  
+- Backend API: [https://booklms.api.com/api/v1](https://api.phoenix-project.online/api/v1)  
 
 > **Note:** Add your deployed frontend domain to backend environment variable `CLIENT_ORIGINS` (comma-separated).
 
 ---
 
-## ✨ Features
+### ✨ Features
 
-### 👨‍🎓 Student
+#### 👨‍🎓 Student
 - Register / Login / Logout
 - Browse published courses
 - View course details
 - Enroll in courses
 - View **My Enrollments**
 
-### 👨‍🏫 Instructor / Admin
+#### 👨‍🏫 Instructor / Admin
 - Create / Update / Delete courses
 - View their own courses (instructor)
 - Admin can view/manage all courses
 
-### 🔒 Security
+#### 🔒 Security
 - JWT authentication via **HttpOnly cookies**
 - CORS allowlist (credentials enabled)
 - Helmet security headers
@@ -42,9 +38,9 @@
 
 ---
 
-## 🛠 Tech Stack
+### 🛠 Tech Stack
 
-### Frontend
+#### Frontend
 - React + TypeScript (Vite)
 - Tailwind CSS
 - React Router
@@ -52,7 +48,7 @@
 - Formik + Yup
 - lucide-react
 
-### Backend
+#### Backend
 - Node.js + Express (TypeScript)
 - MongoDB Atlas + Mongoose
 - JWT (Access/Refresh) via HttpOnly Cookies
@@ -62,7 +58,7 @@
 
 ---
 
-## 📁 Project Structure
+### 📁 Project Structure
 ```text
 root/
 ├── client/          # React (Vite) frontend
