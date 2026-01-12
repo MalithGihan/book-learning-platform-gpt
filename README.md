@@ -1,4 +1,4 @@
-# Book Online Learning Platform (MERN)
+## Book Online Learning Platform (MERN)
 
 <p align="center">
   <img src="docs/cover.png" alt="Project Cover" width="900" />
