@@ -5,16 +5,14 @@ applications:
       phases:
         preBuild:
           commands:
-            - rm -rf node_modules package-lock.json
+            - cd ..
+            - rm -rf node_modules package-lock.json client/node_modules client/package-lock.json
             - npm install --no-audit --no-fund
-            - npm install --no-save "@rollup/rollup-linux-x64-gnu@$(node -p \"require('rollup/package.json').version\")"
+            - ROLLUP_VERSION=$(node -p "require('rollup/package.json').version"); npm install --no-save @rollup/rollup-linux-x64-gnu@$ROLLUP_VERSION
         build:
           commands:
-            - npm run build
+            - npm run build -w client
       artifacts:
         baseDirectory: dist
         files:
           - "**/*"
-      cache:
-        paths:
-          - node_modules/**/*

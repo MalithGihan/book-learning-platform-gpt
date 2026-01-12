@@ -1,21 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const BASE = import.meta.env.VITE_API_BASE_URL as string | undefined;
+const BASE =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://localhost:4000/api/v1"; 
 
-function getErrorMessage(data: any, fallback: string) {
-  return (
-    data?.error ||
-    data?.message ||
-    (typeof data === "string" && data) ||
-    fallback
-  );
-}
-
-export async function api<T>(
-  path: string,
-  init: RequestInit & { json?: unknown } = {},
-): Promise<T> {
-  if (!BASE) throw new Error("Missing VITE_API_BASE_URL");
-
+export async function api<T>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
   const headers = new Headers(init.headers);
   let body = init.body;
 
@@ -32,16 +19,8 @@ export async function api<T>(
   });
 
   const text = await res.text();
-  let data: any = null;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = text;
-  }
+  const data = (() => { try { return text ? JSON.parse(text) : null; } catch { return text; } })();
 
-  if (!res.ok) {
-    throw new Error(getErrorMessage(data, `Request failed (${res.status})`));
-  }
-
+  if (!res.ok) throw new Error(data?.error || data?.message || `Request failed (${res.status})`);
   return data as T;
 }

@@ -13,6 +13,7 @@ export function createApp() {
   app.use(helmet());
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
+  app.set("trust proxy", 1);
 
   const allowedList = (
     process.env.CLIENT_ORIGINS ||
