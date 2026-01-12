@@ -8,12 +8,15 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { register, clearAuthError } from "../../features/auth/authSlice";
-import { api } from "../../app/api"; 
+import { api } from "../../app/api";
+
+type Role = "student" | "instructor";
 
 type RegisterValues = {
   name: string;
   email: string;
   password: string;
+  role: Role;
   terms: boolean;
 };
 
@@ -26,6 +29,10 @@ const registerSchema: Yup.ObjectSchema<RegisterValues> = Yup.object({
   password: Yup.string()
     .min(8, "Password must be at least 8 characters")
     .required("Password is required")
+    .defined(),
+  role: Yup.mixed<Role>()
+    .oneOf(["student", "instructor"])
+    .required("Role is required")
     .defined(),
   terms: Yup.boolean()
     .oneOf([true], "You must accept the terms")
@@ -50,6 +57,7 @@ export default function Register() {
       name: "",
       email: "",
       password: "",
+      role: "student",
       terms: false,
     },
     validationSchema: registerSchema,
@@ -64,6 +72,7 @@ export default function Register() {
           register({
             name: values.name.trim() || undefined,
             email: values.email.trim(),
+            role: values.role,
             password: values.password,
           })
         ).unwrap();
@@ -85,7 +94,9 @@ export default function Register() {
         <div className="hidden md:block relative bg-white p-8 border-r border-gray-200">
           <div className="h-full flex flex-col justify-between">
             <div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-2">Start Your Journey</h2>
+              <h2 className="text-4xl font-bold text-gray-900 mb-2">
+                Start Your Journey
+              </h2>
               <p className="text-gray-600 text-sm">
                 Join thousands of learners and unlock your potential
               </p>
@@ -93,9 +104,18 @@ export default function Register() {
 
             <div className="space-y-4">
               {[
-                ["Unlimited Access", "Access all courses and learning materials anytime"],
-                ["Expert Instructors", "Learn from industry professionals and experts"],
-                ["Certificates", "Earn recognized certificates upon completion"],
+                [
+                  "Unlimited Access",
+                  "Access all courses and learning materials anytime",
+                ],
+                [
+                  "Expert Instructors",
+                  "Learn from industry professionals and experts",
+                ],
+                [
+                  "Certificates",
+                  "Earn recognized certificates upon completion",
+                ],
                 ["Community Support", "Connect with fellow learners worldwide"],
               ].map(([t, d]) => (
                 <div key={t} className="flex items-start gap-3">
@@ -115,8 +135,12 @@ export default function Register() {
         <div className="p-6 md:p-8">
           <div className="max-w-md mx-auto">
             <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-              <p className="mt-1 text-xs text-gray-600">Register and start learning today</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Create Account
+              </h1>
+              <p className="mt-1 text-xs text-gray-600">
+                Register and start learning today
+              </p>
             </div>
 
             {(serverError || error) && (
@@ -128,8 +152,12 @@ export default function Register() {
 
             <form onSubmit={formik.handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-xs font-medium text-gray-700 mb-1">
-                  Name <span className="text-gray-400 font-normal">(optional)</span>
+                <label
+                  htmlFor="name"
+                  className="block text-xs font-medium text-gray-700 mb-1"
+                >
+                  Name{" "}
+                  <span className="text-gray-400 font-normal">(optional)</span>
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -151,7 +179,10 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="email"
+                  className="block text-xs font-medium text-gray-700 mb-1"
+                >
                   Email Address
                 </label>
                 <div className="relative">
@@ -184,7 +215,59 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
+                  I am registering as
+                </label>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => formik.setFieldValue("role", "student")}
+                    className={`rounded-lg border p-3 text-left transition ${
+                      formik.values.role === "student"
+                        ? "border-[#4CE38F] bg-[#4CE38F]/10"
+                        : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="text-sm font-semibold text-gray-900">
+                      Student
+                    </div>
+                    <div className="text-xs text-gray-600 mt-1">
+                      Enroll and learn courses
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => formik.setFieldValue("role", "instructor")}
+                    className={`rounded-lg border p-3 text-left transition ${
+                      formik.values.role === "instructor"
+                        ? "border-[#4CE38F] bg-[#4CE38F]/10"
+                        : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="text-sm font-semibold text-gray-900">
+                      Instructor
+                    </div>
+                    <div className="text-xs text-gray-600 mt-1">
+                      Create and manage courses
+                    </div>
+                  </button>
+                </div>
+
+                {formik.touched.role && formik.errors.role && (
+                  <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {formik.errors.role}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-xs font-medium text-gray-700 mb-1"
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -214,7 +297,9 @@ export default function Register() {
                     {formik.errors.password}
                   </p>
                 ) : (
-                  <p className="mt-1 text-xs text-gray-500">Use at least 8 characters for better security</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Use at least 8 characters for better security
+                  </p>
                 )}
               </div>
 
@@ -229,11 +314,17 @@ export default function Register() {
                 />
                 <label htmlFor="terms" className="text-xs text-gray-600">
                   I agree to the{" "}
-                  <button type="button" className="text-[#4CE38F] hover:text-[#3AB574] font-medium">
+                  <button
+                    type="button"
+                    className="text-[#4CE38F] hover:text-[#3AB574] font-medium"
+                  >
                     Terms of Service
                   </button>{" "}
                   and{" "}
-                  <button type="button" className="text-[#4CE38F] hover:text-[#3AB574] font-medium">
+                  <button
+                    type="button"
+                    className="text-[#4CE38F] hover:text-[#3AB574] font-medium"
+                  >
                     Privacy Policy
                   </button>
                 </label>
@@ -252,8 +343,19 @@ export default function Register() {
               >
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <svg
+                      className="animate-spin h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
                       <path
                         className="opacity-75"
                         fill="currentColor"

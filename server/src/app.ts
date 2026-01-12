@@ -5,18 +5,8 @@ import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import routes from "./routes";
 import { originCheck } from "./middlewares/originCheck";
-import dotenv from "dotenv";
 
 export function createApp() {
-  dotenv.config();
-  const k = process.env.AI_API_KEY ?? "";
-  console.log("AI key prefix:", k.slice(0, 8), "len:", k.length);
-  console.log(
-    "AI key trim len:",
-    k.trim().length,
-    "hasWhitespace:",
-    /\s/.test(k)
-  );
 
   const app = express();
 
