@@ -11,8 +11,8 @@
 ---
 
 ### 🌐 Live Demo
-- Frontend: [https://YOUR-FRONTEND-DOMAIN.com](https://production.d1vxn4a6u30p6c.amplifyapp.com/)  
-- Backend API: [https://YOUR-BACKEND-DOMAIN.com/api/v1](https://api.phoenix-project.online/api/v1)  
+- Frontend: [https://booklms.com](https://production.d1vxn4a6u30p6c.amplifyapp.com/)  
+- Backend API: [https://booklms.api.com/api/v1](https://api.phoenix-project.online/api/v1)  
 
 > **Note:** Add your deployed frontend domain to backend environment variable `CLIENT_ORIGINS` (comma-separated).
 
