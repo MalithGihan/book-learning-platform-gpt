@@ -15,14 +15,26 @@ function safeUser(u: any) {
 export async function register(req: Request, res: Response, next: NextFunction) {
   try {
     const parsed = RegisterSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ ok: false, error: "Invalid payload" });
+    if (!parsed.success) {
+      return res.status(400).json({ ok: false, error: "Invalid payload" });
+    }
 
-    const { name, email, password } = parsed.data;
+    const { name, email, password, role } = parsed.data;
+
     const existing = await User.findOne({ email }).lean();
-    if (existing) return res.status(409).json({ ok: false, error: "Email already in use" });
+    if (existing) {
+      return res.status(409).json({ ok: false, error: "Email already in use" });
+    }
+
+    const safeRole = role === "instructor" ? "instructor" : "student";
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await User.create({ name, email, passwordHash, role: "student" });
+    const user = await User.create({
+      name,
+      email,
+      passwordHash,
+      role: safeRole,
+    });
 
     const payload = { sub: String(user._id), role: user.role, email: user.email };
     res.cookie(ACCESS_COOKIE, signAccessToken(payload), cookieOptions());
@@ -33,6 +45,7 @@ export async function register(req: Request, res: Response, next: NextFunction) 
     next(err);
   }
 }
+
 
 export async function login(req: Request, res: Response, next: NextFunction) {
   try {

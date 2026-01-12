@@ -5,8 +5,6 @@ import AuthLayout from "../layouts/AuthLayout";
 import DashboardLayout from "../layouts/DashboardLayout";
 
 import Home from "../pages/marketing/Home";
-import About from "../pages/marketing/About";
-import Pricing from "../pages/marketing/Pricing";
 
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -24,6 +22,7 @@ import ManageCourses from "../pages/dashboard/ManageCourses";
 import MarketingCourses from "../pages/marketing/Courses";
 import Checkout from "../pages/checkout/Checkout";
 import CourseDetail from "../pages/dashboard/CourseDetail";
+import UnderConstruction from "../pages/UnderConstruction";
 
 export const router = createBrowserRouter([
   {
@@ -34,29 +33,63 @@ export const router = createBrowserRouter([
         element: <MarketingLayout />,
         children: [
           { index: true, element: <Home /> },
-          { path: "about", element: <About /> },
-          { path: "pricing", element: <Pricing /> },
+          { path: "courses", element: <MarketingCourses /> },
+          { path: "about", element: <UnderConstruction /> },
+          { path: "careers", element: <UnderConstruction /> },
+          { path: "contact", element: <UnderConstruction /> },
+          { path: "blog", element: <UnderConstruction /> },
+          { path: "docs", element: <UnderConstruction /> },
+          { path: "help", element: <UnderConstruction /> },
+        ],
+      },
+      {
+        path: "products",
+        element: <MarketingLayout />,
+        children: [
+          { index: true, element: <Home /> },
+          { path: "analytics", element: <UnderConstruction /> },
+          { path: "lms", element: <UnderConstruction /> },
           { path: "courses", element: <MarketingCourses /> },
         ],
       },
-
+      {
+        path: "section",
+        element: <MarketingLayout />,
+        children: [
+          { index: true, element: <Home /> },
+          { path: "teachers", element: <UnderConstruction /> },
+          { path: "students", element: <UnderConstruction /> },
+          { path: "schools", element: <UnderConstruction /> },
+        ],
+      },
+      {
+        path: "pricing",
+        element: <MarketingLayout />,
+        children: [
+          { index: true, element: <Home /> },
+          { path: "students", element: <UnderConstruction /> },
+          { path: "schools", element: <UnderConstruction /> },
+        ],
+      },
       {
         element: <AuthLayout />,
         children: [
-          { path: "/login", element: <Login /> },
-          { path: "/register", element: <Register /> },
+          { path: "login", element: <Login /> },
+          { path: "register", element: <Register /> },
         ],
       },
-
       {
         element: <RequireAuth />,
         children: [
           {
-            path: "/dashboard",
+            path: "dashboard",
             element: <DashboardLayout />,
             children: [
               { index: true, element: <DashboardHome /> },
-
+              { path: "certificates", element: <UnderConstruction /> },
+              { path: "feedback", element: <UnderConstruction /> },
+              { path: "settings", element: <UnderConstruction /> },
+              { path: "profile", element: <UnderConstruction /> },
               {
                 element: <RequireRole allow={["student", "admin"]} />,
                 children: [
@@ -65,19 +98,18 @@ export const router = createBrowserRouter([
                   { path: "courses/:courseId", element: <CourseDetail /> },
                 ],
               },
-
               {
                 element: <RequireRole allow={["instructor", "admin"]} />,
                 children: [
                   { path: "manage-courses", element: <ManageCourses /> },
+                  { path: "reports", element: <UnderConstruction /> },
                 ],
               },
             ],
           },
-          { path: "/checkout/:courseId", element: <Checkout /> },
+          { path: "checkout/:courseId", element: <Checkout /> },
         ],
       },
-
       { path: "*", element: <NotFound /> },
     ],
   },

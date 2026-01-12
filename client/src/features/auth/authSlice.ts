@@ -3,10 +3,25 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../api/http";
 import type { AuthState, User } from "./authTypes";
 
+export type Role = "student" | "instructor" | "admin";
+
 function extractUser(payload: any): User | null {
   const u = payload?.user ?? payload?.data ?? payload;
-  if (!u || !u.role) return null;
+  if (!u) return null;
+
+  if (!u.role || !u.email) return null;
+
   return u as User;
+}
+
+function extractErrorMessage(e: any, fallback: string) {
+  return (
+    e?.data?.error ||
+    e?.data?.message ||
+    e?.error ||
+    e?.message ||
+    fallback
+  );
 }
 
 export const bootstrapMe = createAsyncThunk<User | null>(
@@ -18,7 +33,7 @@ export const bootstrapMe = createAsyncThunk<User | null>(
     } catch {
       return null;
     }
-  },
+  }
 );
 
 export const login = createAsyncThunk<
@@ -32,13 +47,13 @@ export const login = createAsyncThunk<
     if (!user) throw new Error("Invalid login response");
     return user;
   } catch (e: any) {
-    return rejectWithValue(e?.message || "Login failed");
+    return rejectWithValue(extractErrorMessage(e, "Login failed"));
   }
 });
 
 export const register = createAsyncThunk<
   User,
-  { name?: string; email: string; password: string },
+  { name?: string; email: string; role: "student" | "instructor"; password: string },
   { rejectValue: string }
 >("auth/register", async (body, { rejectWithValue }) => {
   try {
@@ -47,7 +62,7 @@ export const register = createAsyncThunk<
     if (!user) throw new Error("Invalid register response");
     return user;
   } catch (e: any) {
-    return rejectWithValue(e?.message || "Register failed");
+    return rejectWithValue(extractErrorMessage(e, "Register failed"));
   }
 });
 
@@ -57,9 +72,9 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
     try {
       await api<any>("/auth/logout", { method: "POST" });
     } catch (e: any) {
-      return rejectWithValue(e?.message || "Logout failed");
+      return rejectWithValue(extractErrorMessage(e, "Logout failed"));
     }
-  },
+  }
 );
 
 const initialState: AuthState = {
@@ -84,6 +99,10 @@ const authSlice = createSlice({
     b.addCase(bootstrapMe.fulfilled, (s, a) => {
       s.user = a.payload;
       s.status = a.payload ? "authed" : "guest";
+    });
+    b.addCase(bootstrapMe.rejected, (s) => {
+      s.user = null;
+      s.status = "guest";
     });
 
     b.addCase(login.pending, (s) => {
@@ -115,6 +134,10 @@ const authSlice = createSlice({
     b.addCase(logout.fulfilled, (s) => {
       s.user = null;
       s.status = "guest";
+      s.error = null;
+    });
+    b.addCase(logout.rejected, (s, a) => {
+      s.error = a.payload || "Logout failed";
     });
   },
 });
