@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  (import.meta.env.PRODUCTION_API_BASE_URL as string | undefined) ??
   "http://localhost:4000/api/v1";
 
 function getErrorMessage(data: any, fallback: string) {
