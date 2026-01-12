@@ -1,17 +1,18 @@
 version: 1
 applications:
-  - appRoot: .
+  - appRoot: client
     frontend:
       phases:
         preBuild:
           commands:
-            - rm -rf node_modules package-lock.json
+            - cd ..
+            - rm -rf node_modules package-lock.json client/node_modules client/package-lock.json
             - npm install --no-audit --no-fund
-            - ROLLUP_VERSION=$(node -p "require('rollup/package.json').version"); echo "Rollup=$ROLLUP_VERSION"; npm install --no-save @rollup/rollup-linux-x64-gnu@$ROLLUP_VERSION
+            - ROLLUP_VERSION=$(node -p "require('rollup/package.json').version"); npm install --no-save @rollup/rollup-linux-x64-gnu@$ROLLUP_VERSION
         build:
           commands:
             - npm run build -w client
       artifacts:
-        baseDirectory: client/dist
+        baseDirectory: dist
         files:
           - "**/*"
