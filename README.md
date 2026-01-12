@@ -10,7 +10,7 @@
 
 ---
 
-# 🌐 Live Demo
+### 🌐 Live Demo
 - Frontend: https://YOUR-FRONTEND-DOMAIN.com  
 - Backend API: https://YOUR-BACKEND-DOMAIN.com/api/v1  
 
@@ -18,21 +18,21 @@
 
 ---
 
-# ✨ Features
+### ✨ Features
 
-# 👨‍🎓 Student
+#### 👨‍🎓 Student
 - Register / Login / Logout
 - Browse published courses
 - View course details
 - Enroll in courses
 - View **My Enrollments**
 
-# 👨‍🏫 Instructor / Admin
+#### 👨‍🏫 Instructor / Admin
 - Create / Update / Delete courses
 - View their own courses (instructor)
 - Admin can view/manage all courses
 
-# 🔒 Security
+#### 🔒 Security
 - JWT authentication via **HttpOnly cookies**
 - CORS allowlist (credentials enabled)
 - Helmet security headers
@@ -42,7 +42,7 @@
 
 ---
 
-# 🛠 Tech Stack
+### 🛠 Tech Stack
 
 ### Frontend
 - React + TypeScript (Vite)
