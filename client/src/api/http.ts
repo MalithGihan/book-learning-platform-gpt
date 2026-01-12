@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const BASE = import.meta.env.PRODUCTION_API_BASE_URL as string | undefined;
+const BASE = import.meta.env.VITE_API_BASE_URL as string | undefined;
 
 function getErrorMessage(data: any, fallback: string) {
   return (
