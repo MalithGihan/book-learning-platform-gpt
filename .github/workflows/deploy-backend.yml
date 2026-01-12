@@ -25,6 +25,12 @@ jobs:
       - name: Build server
         run: npm run build -w server
 
+      - name: Install prod deps in server (for Lambda package)
+        working-directory: server
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install --omit=dev --no-audit --no-fund --workspaces=false
+
       - name: Configure AWS creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
