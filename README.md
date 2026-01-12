@@ -4,10 +4,6 @@
   <img src="docs/cover.png" alt="Project Cover" width="900" />
 </p>
 
-<p align="center">
-  <b>Courses • Enrollment • RBAC • Secure Auth (HttpOnly Cookies)</b>
-</p>
-
 ---
 
 ### 🌐 Live Demo
