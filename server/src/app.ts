@@ -7,7 +7,6 @@ import routes from "./routes";
 import { originCheck } from "./middlewares/originCheck";
 
 export function createApp() {
-
   const app = express();
 
   app.use(helmet());
