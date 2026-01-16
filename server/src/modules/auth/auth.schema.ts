@@ -11,3 +11,12 @@ export const LoginSchema = z.object({
   email: z.string().email().max(120),
   password: z.string().min(8).max(72),
 });
+
+export const VerifyEmailSchema = z.object({
+  email: z.string().email().max(120),
+  code: z.string().regex(/^\d{6}$/),
+});
+
+export const ResendVerifySchema = z.object({
+  email: z.string().email().max(120),
+});
