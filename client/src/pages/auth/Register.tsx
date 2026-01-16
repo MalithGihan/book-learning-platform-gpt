@@ -7,8 +7,9 @@ import { Lock, Mail, User, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { register, clearAuthError } from "../../features/auth/authSlice";
+import { register, clearAuthError, bootstrapMe } from "../../features/auth/authSlice";
 import { api } from "../../app/api";
+import VerifyEmailModal from "../../components/model/VerifyEmailModal";
 
 type Role = "student" | "instructor";
 
@@ -51,6 +52,8 @@ export default function Register() {
 
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyEmail, setVerifyEmail] = useState("");
 
   const formik = useFormik<RegisterValues>({
     initialValues: {
@@ -68,7 +71,7 @@ export default function Register() {
 
       setSubmitting(true);
       try {
-        await dispatch(
+        const result = await dispatch(
           register({
             name: values.name.trim() || undefined,
             email: values.email.trim(),
@@ -77,8 +80,13 @@ export default function Register() {
           })
         ).unwrap();
 
-        dispatch(api.util.invalidateTags([{ type: "Courses", id: "LIST" }]));
+        if (result.kind === "needs_verification") {
+          setVerifyEmail(result.email);
+          setVerifyOpen(true);
+          return;
+        }
 
+        dispatch(api.util.invalidateTags([{ type: "Courses", id: "LIST" }]));
         nav(from, { replace: true });
       } catch (e: any) {
         setServerError(error || "Registration failed. Please try again.");
@@ -383,6 +391,18 @@ export default function Register() {
           </div>
         </div>
       </div>
+
+      <VerifyEmailModal
+        open={verifyOpen}
+        email={verifyEmail}
+        onClose={() => setVerifyOpen(false)}
+        onVerified={async () => {
+          setVerifyOpen(false);
+          await dispatch(bootstrapMe());
+          dispatch(api.util.invalidateTags([{ type: "Courses", id: "LIST" }]));
+          nav(from, { replace: true });
+        }}
+      />
     </div>
   );
 }

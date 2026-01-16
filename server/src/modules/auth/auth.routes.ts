@@ -1,5 +1,5 @@
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { requireAuth } from "../../middlewares/requireAuth";
 import {
   register,
@@ -13,6 +13,8 @@ import {
   listSessions,
   revokeSession,
   revokeOtherSessions,
+  verifyEmail,
+  resendVerify,
 } from "./auth.controller";
 
 const router = Router();
@@ -22,8 +24,9 @@ const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   keyGenerator: (req) => {
-    const email = (req.body?.email || "").toLowerCase().trim();
-    return `${req.ip}:${email}`;
+    const email = String(req.body?.email || "").toLowerCase().trim();
+    const ipKey = ipKeyGenerator(req.ip || "");
+    return `${ipKey}:${email}`;
   },
 });
 
@@ -32,6 +35,8 @@ const sessionLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60 });
 
 
 router.post("/register", authLimiter, register);
+router.post("/verify-email", authLimiter, verifyEmail);
+router.post("/verify-email/resend", authLimiter, resendVerify);
 router.post("/login", loginLimiter, login);
 router.post("/refresh", authLimiter, refresh);
 

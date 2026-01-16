@@ -4,7 +4,12 @@ import bcrypt from "bcrypt";
 import { User } from "../../models/user.model";
 import { Session } from "../../models/session.model";
 
-import { RegisterSchema, LoginSchema } from "./auth.schema";
+import {
+  RegisterSchema,
+  LoginSchema,
+  ResendVerifySchema,
+  VerifyEmailSchema,
+} from "./auth.schema";
 
 import { signAccessToken } from "../../utils/jwt";
 import { cookieOptions, shortCookieOptions } from "../../utils/cookies";
@@ -15,6 +20,9 @@ import { audit } from "../audit/audit.service";
 import { genOidcParams, getGoogleClient } from "./google.oidc";
 import mongoose from "mongoose";
 import { lookupIpLocation } from "../../utils/ipLocation";
+import { genOtp6, hashOtp, safeEqHash } from "../../utils/otp";
+import { sendVerificationEmail } from "../../utils/mailer";
+import { EmailVerification } from "../../models/emailVerification";
 
 const ACCESS_COOKIE = "access_token";
 const REFRESH_COOKIE = "refresh_token";
@@ -94,13 +102,28 @@ export async function register(
     const { name, password, role } = parsed.data;
     const email = parsed.data.email.toLowerCase().trim();
 
-    const existing = await User.findOne({ email }).lean();
+    const existing = await User.findOne({ email });
     if (existing) {
+      if (!existing.emailVerified) {
+        const code = genOtp6();
+        await EmailVerification.findOneAndUpdate(
+          { userId: existing._id },
+          {
+            codeHash: hashOtp(code),
+            expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+            attempts: 0,
+            sentCount: 1,
+            lastSentAt: new Date(),
+          },
+          { upsert: true, new: true }
+        );
+        await sendVerificationEmail(email, code);
+        return res.json({ ok: true, needsEmailVerification: true, email });
+      }
       return res.status(409).json({ ok: false, error: "Email already in use" });
     }
 
     const safeRole = role === "instructor" ? "instructor" : "student";
-
     const passwordHash = await bcrypt.hash(password, 12);
 
     const user = await User.create({
@@ -111,10 +134,121 @@ export async function register(
       emailVerified: false,
     });
 
-    await issueSessionCookies(req, res, user);
+    const code = genOtp6();
+    await EmailVerification.findOneAndUpdate(
+      { userId: user._id },
+      {
+        codeHash: hashOtp(code),
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        attempts: 0,
+        sentCount: 1,
+        lastSentAt: new Date(),
+      },
+      { upsert: true, new: true }
+    );
+
+    await sendVerificationEmail(user.email, code);
     await audit(req, "auth.register", { email: user.email });
 
-    return res.status(201).json({ ok: true, user: safeUser(user) });
+    return res.status(201).json({
+      ok: true,
+      needsEmailVerification: true,
+      email: user.email,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function verifyEmail(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const parsed = VerifyEmailSchema.safeParse(req.body);
+    if (!parsed.success)
+      return res.status(400).json({ ok: false, error: "Invalid payload" });
+
+    const email = parsed.data.email.toLowerCase().trim();
+    const { code } = parsed.data;
+
+    const user = await User.findOne({ email });
+    if (!user)
+      return res.status(400).json({ ok: false, error: "Invalid code" });
+    if (user.emailVerified) return res.json({ ok: true });
+
+    const rec = await EmailVerification.findOne({ userId: user._id });
+    if (!rec || rec.expiresAt.getTime() < Date.now()) {
+      return res.status(400).json({ ok: false, error: "Code expired" });
+    }
+    if (rec.attempts >= 5) {
+      return res.status(429).json({ ok: false, error: "Too many attempts" });
+    }
+
+    const ok = safeEqHash(hashOtp(code), rec.codeHash);
+    if (!ok) {
+      rec.attempts += 1;
+      await rec.save();
+      await audit(req, "auth.verify_failed", { email });
+      return res.status(400).json({ ok: false, error: "Invalid code" });
+    }
+
+    user.emailVerified = true;
+    user.lastLoginAt = new Date();
+    await user.save();
+    await EmailVerification.deleteOne({ _id: rec._id });
+
+    await issueSessionCookies(req, res, user);
+    await audit(req, "auth.email_verified", { email });
+
+    return res.json({ ok: true, user: safeUser(user) });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function resendVerify(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const parsed = ResendVerifySchema.safeParse(req.body);
+    if (!parsed.success)
+      return res.status(400).json({ ok: false, error: "Invalid payload" });
+
+    const email = parsed.data.email.toLowerCase().trim();
+    const user = await User.findOne({ email });
+    if (!user) return res.json({ ok: true });
+    if (user.emailVerified) return res.json({ ok: true });
+
+    const existing = await EmailVerification.findOne({ userId: user._id });
+    const now = Date.now();
+
+    if (existing?.lastSentAt && now - existing.lastSentAt.getTime() < 60_000) {
+      return res
+        .status(429)
+        .json({ ok: false, error: "Please wait before requesting again" });
+    }
+
+    const code = genOtp6();
+    await EmailVerification.findOneAndUpdate(
+      { userId: user._id },
+      {
+        codeHash: hashOtp(code),
+        expiresAt: new Date(now + 10 * 60 * 1000),
+        attempts: 0,
+        sentCount: (existing?.sentCount || 0) + 1,
+        lastSentAt: new Date(),
+      },
+      { upsert: true, new: true }
+    );
+
+    await sendVerificationEmail(user.email, code);
+    await audit(req, "auth.verify_resent", { email });
+
+    return res.json({ ok: true });
   } catch (err) {
     next(err);
   }
@@ -150,6 +284,11 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     }
 
     const ok = await bcrypt.compare(password, passwordHash);
+
+    if (!user.emailVerified) {
+      return res.status(403).json({ ok: false, error: "Email not verified" });
+    }
+
     if (!ok) {
       user.failedLoginCount = (user.failedLoginCount || 0) + 1;
 
