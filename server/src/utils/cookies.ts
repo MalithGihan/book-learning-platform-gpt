@@ -11,3 +11,7 @@ export function cookieOptions(): CookieOptions {
     path: "/",
   };
 }
+
+export function shortCookieOptions(maxAgeMs = 10 * 60 * 1000) {
+  return { ...cookieOptions(), maxAge: maxAgeMs };
+}

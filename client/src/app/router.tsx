@@ -23,6 +23,8 @@ import MarketingCourses from "../pages/marketing/Courses";
 import Checkout from "../pages/checkout/Checkout";
 import CourseDetail from "../pages/dashboard/CourseDetail";
 import UnderConstruction from "../pages/UnderConstruction";
+import AuthSuccess from "../pages/auth/loader/AuthSuccess";
+import Settings from "../pages/auth/account/Settings";
 
 export const router = createBrowserRouter([
   {
@@ -76,6 +78,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "login", element: <Login /> },
           { path: "register", element: <Register /> },
+          { path: "auth/success", element: <AuthSuccess /> },
         ],
       },
       {
@@ -88,7 +91,7 @@ export const router = createBrowserRouter([
               { index: true, element: <DashboardHome /> },
               { path: "certificates", element: <UnderConstruction /> },
               { path: "feedback", element: <UnderConstruction /> },
-              { path: "settings", element: <UnderConstruction /> },
+              { path: "settings", element: <Settings /> },
               { path: "profile", element: <UnderConstruction /> },
               {
                 element: <RequireRole allow={["student", "admin"]} />,
@@ -107,7 +110,7 @@ export const router = createBrowserRouter([
               },
             ],
           },
-          { path: "checkout/:courseId", element: <Checkout /> },
+          { path: "checkout/:courseId", element: <Checkout /> }
         ],
       },
       { path: "*", element: <NotFound /> },
