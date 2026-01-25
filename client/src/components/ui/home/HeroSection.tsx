@@ -2,10 +2,15 @@
 import { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 
-export default function HeroSection() {
+type Props = {
+  onSearch: (q: string) => void;
+  isSearching?: boolean;
+};
+
+export default function HeroSection({ onSearch, isSearching }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -18,7 +23,7 @@ export default function HeroSection() {
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     if (sectionRef.current) {
@@ -33,10 +38,7 @@ export default function HeroSection() {
   }, []);
 
   const handleSearch = () => {
-    if (searchQuery.trim()) {
-      console.log("Searching for:", searchQuery);
-      // Add your search logic here
-    }
+    onSearch(searchQuery);
   };
 
   return (
@@ -119,7 +121,9 @@ export default function HeroSection() {
       <div className="mx-auto max-w-7xl px-4 md:px-6">
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
           <div className="w-full lg:w-1/2 order-2 lg:order-1">
-            <div className={`relative initial-hidden ${isVisible ? 'animate-fade-in-left' : ''}`}>
+            <div
+              className={`relative initial-hidden ${isVisible ? "animate-fade-in-left" : ""}`}
+            >
               <img
                 src="/images/hero.png"
                 alt="Learning environment"
@@ -129,37 +133,53 @@ export default function HeroSection() {
           </div>
 
           <div className="w-full lg:w-1/2 order-1 lg:order-2">
-            <h1 className={`text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 leading-tight mb-6 initial-hidden ${isVisible ? 'animate-fade-in-right delay-100' : ''}`}>
+            <h1
+              className={`text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 leading-tight mb-6 initial-hidden ${isVisible ? "animate-fade-in-right delay-100" : ""}`}
+            >
               Unlock Your Potential with Expert Led Courses
             </h1>
 
-            <p className={`text-sm md:text-md text-black mb-8 initial-hidden ${isVisible ? 'animate-fade-in-right delay-200' : ''}`}>
+            <p
+              className={`text-sm md:text-md text-black mb-8 initial-hidden ${isVisible ? "animate-fade-in-right delay-200" : ""}`}
+            >
               Learn new skills, pursue your interests, and advance your career
               with our comprehensive range of online courses.
             </p>
 
-            <h2 className={`text-base md:text-xl font-semibold text-slate-900 mb-6 initial-hidden ${isVisible ? 'animate-fade-in-right delay-300' : ''}`}>
+            <h2
+              className={`text-base md:text-xl font-semibold text-slate-900 mb-6 initial-hidden ${isVisible ? "animate-fade-in-right delay-300" : ""}`}
+            >
               What do you want to learn today?
             </h2>
 
-            <div className={`flex mb-6 initial-hidden ${isVisible ? 'animate-fade-in-up delay-400' : ''}`}>
+            <div
+              className={`flex mb-6 initial-hidden ${isVisible ? "animate-fade-in-up delay-400" : ""}`}
+            >
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for courses..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearch();
+                }}
+                placeholder="Search for courses or type a goal (e.g., 'I want to be a Frontend engineer')"
                 className="flex-1 px-4 py-3 text-sm border border-slate-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-[#4CE38F] focus:border-transparent"
               />
               <button
                 onClick={handleSearch}
-                className="px-6 py-3 bg-[#4CE38F] text-white font-medium rounded-r-md hover:bg-green-600 transition-colors flex items-center gap-2"
+                disabled={isSearching}
+                className="px-6 py-3 bg-[#4CE38F] text-white font-medium rounded-r-md hover:bg-green-600 transition-colors flex items-center gap-2 disabled:opacity-60"
               >
-                <span className="hidden sm:inline">Search</span>
+                <span className="hidden sm:inline">
+                  {isSearching ? "Searching..." : "Search"}
+                </span>
                 <Search className="h-5 w-5" />
               </button>
             </div>
 
-            <div className={`flex justify-center items-center gap-3 initial-hidden ${isVisible ? 'animate-fade-in-up delay-500' : ''}`}>
+            <div
+              className={`flex justify-center items-center gap-3 initial-hidden ${isVisible ? "animate-fade-in-up delay-500" : ""}`}
+            >
               <div className="relative">
                 <img src="/images/group.png" alt="group" className="w-10 h-6" />
               </div>
