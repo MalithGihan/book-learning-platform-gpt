@@ -113,6 +113,43 @@ function keywordFallback(message: string): string[] {
     .slice(0, 8);
 }
 
+function categoryRegex(label: string) {
+  return new RegExp(`^${escapeRegExp(label)}$`, "i"); // exact match, case-insensitive
+}
+
+type Track = "backend" | "frontend" | "fullstack" | null;
+
+function inferTrackFromPrompt(message: string): Track {
+  const s = message.toLowerCase();
+
+  if (/\bfull\s*stack\b/.test(s) || s.includes("fullstack")) return "fullstack";
+  if (/\bbackend\b/.test(s) || s.includes("server") || s.includes("api"))
+    return "backend";
+  if (/\bfrontend\b/.test(s) || s.includes("ui") || s.includes("react"))
+    return "frontend";
+
+  return null;
+}
+
+const TRACK_CATEGORIES: Record<Exclude<Track, null>, string[]> = {
+  backend: ["Backend", "Programming", "Security", "Database", "DevOps"],
+  frontend: ["Frontend", "UI", "Design"],
+  fullstack: [
+    "Frontend",
+    "Backend",
+    "Programming",
+    "Security",
+    "Database",
+    "DevOps",
+  ],
+};
+
+function buildCategoryConstraint(allowed: string[]) {
+  return {
+    $or: allowed.map((cat) => ({ category: categoryRegex(cat) })),
+  };
+}
+
 router.post("/search", aiBudgetGuard, async (req, res) => {
   const { message, limit } = req.body as { message?: string; limit?: number };
 
@@ -160,7 +197,36 @@ router.post("/search", aiBudgetGuard, async (req, res) => {
 
     const baseFilter: Record<string, any> = { published: true };
 
+    const track = inferTrackFromPrompt(message);
+    const allowedCategories = track ? TRACK_CATEGORIES[track] : [];
+
+    const aiCategoryNorm = aiCategory ? aiCategory.trim() : "";
+
+    const and: any[] = [];
+
+    if (allowedCategories.length) {
+      and.push(buildCategoryConstraint(allowedCategories));
+    } else if (aiCategoryNorm) {
+      and.push({ category: categoryRegex(aiCategoryNorm) });
+    }
+
+    if (keywords.length) {
+      const regs = keywords.map(
+        (k) => new RegExp(escapeRegExp(String(k)), "i"),
+      );
+      and.push({
+        $or: [
+          { title: { $in: regs } },
+          { description: { $in: regs } },
+          { tags: { $in: regs } },
+          { category: { $in: regs } },
+        ],
+      });
+    }
+
     const filterWithCategory: Record<string, any> = { ...baseFilter };
+    if (and.length) filterWithCategory.$and = and;
+
     if (aiCategory) filterWithCategory.category = aiCategory;
 
     if (keywords.length) {
@@ -180,29 +246,18 @@ router.post("/search", aiBudgetGuard, async (req, res) => {
       .limit(200)
       .lean();
 
-    if (!candidates.length && aiCategory) {
-      const filterNoCategory: Record<string, any> = { ...baseFilter };
-
-      if (keywords.length) {
-        const regs = keywords.map(
-          (k) => new RegExp(escapeRegExp(String(k)), "i"),
-        );
-        filterNoCategory.$or = [
-          { title: { $in: regs } },
-          { description: { $in: regs } },
-          { tags: { $in: regs } },
-          { category: { $in: regs } },
-        ];
-      }
-
-      candidates = await Course.find(filterNoCategory)
+    if (!candidates.length && allowedCategories.length) {
+      candidates = await Course.find({
+        published: true,
+        $or: allowedCategories.map((cat) => ({ category: categoryRegex(cat) })),
+      })
         .sort({ createdAt: -1 })
         .limit(200)
         .lean();
     }
 
     if (!candidates.length) {
-      candidates = await Course.find(baseFilter)
+      candidates = await Course.find({ published: true })
         .sort({ createdAt: -1 })
         .limit(200)
         .lean();
@@ -240,7 +295,11 @@ router.post("/search", aiBudgetGuard, async (req, res) => {
             score += 2;
         }
 
-        if (aiCategory && c.category === aiCategory) score += 3;
+        if (
+          aiCategory &&
+          String(c.category || "").toLowerCase() === aiCategory.toLowerCase()
+        )
+          score += 3;
 
         if (aiLevel && c.level === aiLevel) score += 1;
 
