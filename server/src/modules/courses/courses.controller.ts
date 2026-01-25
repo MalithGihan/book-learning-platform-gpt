@@ -7,7 +7,7 @@ import { Enrollment } from "../../models/Enrollment";
 export async function createCourse(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   try {
     const parsed = CreateCourseSchema.safeParse(req.body);
@@ -28,7 +28,7 @@ export async function createCourse(
 export async function listCourses(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   try {
     const role = req.user?.role;
@@ -87,7 +87,7 @@ export async function listCourses(
 export async function getCourse(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   try {
     const { id } = req.params;
@@ -100,10 +100,52 @@ export async function getCourse(
   }
 }
 
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export async function listPublishedCourses(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
+    const page = Math.max(1, Number(req.query.page || 1));
+    const limit = Math.min(24, Math.max(1, Number(req.query.limit || 12)));
+    const skip = (page - 1) * limit;
+
+    const filter: Record<string, any> = { published: true };
+
+    if (q) {
+      const re = new RegExp(escapeRegExp(q), "i");
+      filter.$or = [
+        { title: re },
+        { description: re },
+        { tags: re },
+        { category: re },
+      ];
+    }
+
+    const [total, courses] = await Promise.all([
+      Course.countDocuments(filter),
+      Course.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+    ]);
+
+    return res.json({ ok: true, total, page, limit, courses });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function updateCourse(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   try {
     const parsed = UpdateCourseSchema.safeParse(req.body);
@@ -127,7 +169,7 @@ export async function updateCourse(
 export async function deleteCourse(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   try {
     const { id } = req.params;
