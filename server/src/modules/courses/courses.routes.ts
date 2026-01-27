@@ -8,6 +8,7 @@ import {
   updateCourse,
   deleteCourse,
   listPublishedCourses,
+  getMyCourseEnrollmentStats,
 } from "./courses.controller";
 import { optionalAuth } from "../../middlewares/optionalAuth";
 
@@ -26,6 +27,7 @@ router.put(
   requireRole("instructor", "admin"),
   updateCourse,
 );
+
 router.delete(
   "/:id",
   requireAuth,

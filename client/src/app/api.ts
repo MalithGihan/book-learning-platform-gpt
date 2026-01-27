@@ -12,6 +12,6 @@ export const api = createApi({
     baseUrl,
     credentials: "include",
   }),
-  tagTypes: ["Courses", "Course", "Enrollments"],
+  tagTypes: ["Courses", "Course", "Enrollments", "InstructorStats"],
   endpoints: () => ({}),
 });
