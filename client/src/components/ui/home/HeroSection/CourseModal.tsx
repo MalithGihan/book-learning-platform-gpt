@@ -7,6 +7,10 @@ import {
   Star,
   Users,
   X,
+  Tag,
+  Layers,
+  Hash,
+  Image as ImageIcon,
 } from "lucide-react";
 
 type CourseModalProps = {
@@ -37,9 +41,15 @@ export type Course = {
   students?: number;
   lessons?: number;
   duration?: string;
-
-  enrollmentStatus?: string | null;
+  enrollmentStatus?: string | null; 
 };
+
+function normalizeStatus(s?: string | null) {
+  const v = String(s ?? "").toLowerCase();
+  if (v === "enrolled") return "enrolled";
+  if (v === "not_enrolled") return "not_enrolled";
+  return "unknown";
+}
 
 export function CourseModal({
   course,
@@ -47,8 +57,12 @@ export function CourseModal({
   onEnroll,
   user,
 }: CourseModalProps) {
-  const enrolled = course.enrollmentStatus === "enrolled";
+  const status = normalizeStatus(course.enrollmentStatus);
+  const enrolled = status === "enrolled";
+
   const canEnroll = !user || user.role === "student" || user.role === "admin";
+
+  const tags = Array.isArray(course.tags) ? course.tags.filter(Boolean) : [];
 
   const stats = [
     {
@@ -72,7 +86,7 @@ export function CourseModal({
     {
       icon: Clock,
       label: "Duration",
-      value: course.duration ?? "0 hrs",
+      value: course.duration ?? "Self-paced",
       iconClass: "text-gray-600",
     },
   ];
@@ -88,35 +102,72 @@ export function CourseModal({
         style={{ animation: "slideUp 0.3s ease-out" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="relative h-32 bg-linear-to-br from-gray-50 to-gray-100 overflow-hidden">
+        <div className="relative h-36 bg-linear-to-br from-gray-50 to-gray-100 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(76,227,143,0.1),transparent_70%)]" />
 
           <button
             onClick={onClose}
             className="absolute top-3 right-3 z-10 p-1.5 bg-white hover:bg-gray-50 rounded-full text-gray-600 hover:text-gray-900 transition-colors duration-200 shadow-sm border border-gray-200"
+            aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
 
-          <div className="absolute bottom-4 left-4 right-4">
-            {course.level && (
-              <span
-                className="inline-block px-2 py-0.5 rounded text-sm font-semibold mb-2 bg-linear-to-r from-white/30 to-black/10 backdrop-blur-md
-                shadow-[0_0_0_2px_rgba(0,0,0,0.08),0_0_14px_rgba(0,0,0,0.12)]"
-              >
-                {course.level}
-              </span>
-            )}
-            <h2 className="text-xl font-bold text-gray-900 mb-1 leading-tight">
-              {course.title || "Untitled Course"}
-            </h2>
+          <div className="absolute bottom-4 left-4 right-4 flex items-end gap-3">
+            <div className="shrink-0 w-12 h-12 rounded-lg bg-white border border-gray-200 shadow-sm flex items-center justify-center overflow-hidden">
+              {course.image ? (
+                <img
+                  src={course.image}
+                  alt={course.title || "course"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <ImageIcon className="h-5 w-5 text-gray-400" />
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                    enrolled
+                      ? "bg-[#4CE38F] text-white border-[#4CE38F]"
+                      : "bg-white/80 text-gray-700 border-gray-200"
+                  }`}
+                >
+                  <CheckCircle2 className="h-3 w-3" />
+                  {enrolled ? "Enrolled" : "Available"}
+                </span>
+
+                {course.level && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-white/70 border border-gray-200 text-gray-700">
+                    <Layers className="h-3 w-3 text-gray-500" />
+                    {course.level}
+                  </span>
+                )}
+
+                {course.category && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-white/70 border border-gray-200 text-gray-700">
+                    <Tag className="h-3 w-3 text-gray-500" />
+                    {course.category}
+                  </span>
+                )}
+              </div>
+
+              <h2 className="text-xl font-bold text-gray-900 leading-tight truncate">
+                {course.title || "Untitled Course"}
+              </h2>
+
+              <div className="mt-1 flex items-center gap-1 text-[10px] text-gray-500">
+                <Hash className="h-3 w-3" />
+                <span className="truncate">{course._id}</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="overflow-y-auto max-h-[calc(85vh-8rem)] p-4">
-          {/* Stats */}
-          <div className="grid grid-cols-4 gap-2 mb-4">
+        <div className="overflow-y-auto max-h-[calc(85vh-9rem)] p-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
             {stats.map((stat, i) => (
               <div
                 key={i}
@@ -135,7 +186,28 @@ export function CourseModal({
             ))}
           </div>
 
-          {/* About */}
+          <div className="mb-4">
+            <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-1.5">
+              <div className="w-0.5 h-4 bg-[#4CE38F] rounded-full" />
+              Tags
+            </h3>
+
+            {tags.length ? (
+              <div className="flex flex-wrap gap-2">
+                {tags.map((t) => (
+                  <span
+                    key={t}
+                    className="px-2 py-1 rounded-full text-[11px] bg-[#4CE38F]/10 text-gray-800 border border-[#4CE38F]/20"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">No tags available.</p>
+            )}
+          </div>
+
           <div className="mb-4">
             <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-1.5">
               <div className="w-0.5 h-4 bg-[#4CE38F] rounded-full" />
@@ -146,36 +218,46 @@ export function CourseModal({
             </p>
           </div>
 
-          {/* Learn */}
           <div className="mb-4">
             <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-1.5">
               <div className="w-0.5 h-4 bg-[#4CE38F] rounded-full" />
-              What You'll Learn
+              Course Info
             </h3>
 
             <div className="grid md:grid-cols-2 gap-2">
               {[
-                "Build production-ready projects",
-                "Master industry best practices",
-                "Earn a certificate of completion",
-                "Access to lifetime updates",
-              ].map((item, i) => (
+                { label: "Category", value: course.category ?? "—" },
+                { label: "Level", value: course.level ?? "—" },
+                { label: "Duration", value: course.duration ?? "—" },
+                { label: "Lessons", value: String(course.lessons ?? 0) },
+                { label: "Students", value: String(course.students ?? 0) },
+                { label: "Rating", value: String(course.rating ?? "0.0") },
+                {
+                  label: "Enrollment Status",
+                  value:
+                    status === "enrolled"
+                      ? "Enrolled"
+                      : status === "not_enrolled"
+                        ? "Not Enrolled"
+                        : "N/A",
+                },
+                { label: "Image", value: course.image ? "Provided" : "None" },
+              ].map((row) => (
                 <div
-                  key={i}
-                  className="flex items-start gap-1.5 p-2 bg-gray-50 rounded border border-gray-100"
+                  key={row.label}
+                  className="flex items-center justify-between gap-3 p-2 bg-gray-50 rounded border border-gray-100"
                 >
-                  <div className="shrink-0 w-4 h-4 rounded-full bg-[#4CE38F]/15 flex items-center justify-center mt-0.5">
-                    <CheckCircle2 className="h-2.5 w-2.5 text-[#4CE38F]" />
-                  </div>
-                  <span className="text-gray-700 leading-relaxed text-xs">
-                    {item}
+                  <span className="text-[11px] text-gray-500 uppercase tracking-wide">
+                    {row.label}
+                  </span>
+                  <span className="text-xs text-gray-800 font-semibold text-right">
+                    {row.value}
                   </span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Price + CTA */}
           <div
             className="flex flex-col md:flex-row items-center justify-between gap-3 p-3 bg-linear-to-r from-white/30 to-black/10 backdrop-blur-md
             shadow-[0_0_0_2px_rgba(0,0,0,0.08),0_0_14px_rgba(0,0,0,0.12)] rounded-lg"
@@ -185,7 +267,7 @@ export function CourseModal({
                 Course Investment
               </div>
               <div className="text-xl font-bold text-gray-900">
-                {typeof course.price === "number" ? (
+                {typeof course.price === "number" && course.price > 0 ? (
                   <>LKR {course.price.toLocaleString()}</>
                 ) : (
                   <span className="text-[#4CE38F]">Free</span>
