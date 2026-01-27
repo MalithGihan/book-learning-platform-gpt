@@ -1,4 +1,3 @@
-// src/modules/auth/google.oidc.ts
 import { Issuer, generators } from "openid-client";
 import type { Client } from "openid-client";
 
