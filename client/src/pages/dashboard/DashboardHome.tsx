@@ -16,6 +16,7 @@ import {
   Shield,
   Sparkles,
 } from "lucide-react";
+import InstructorEnrollmentStats from "../../components/instructor/InstructorEnrollmentStats";
 
 type Role = "student" | "instructor" | "admin";
 
@@ -38,7 +39,7 @@ export default function DashboardHome() {
     { viewer },
     {
       skip: !user,
-    }
+    },
   );
 
   const {
@@ -263,7 +264,11 @@ export default function DashboardHome() {
             </Link>
           </div>
         </div>
+
+        
+
       </div>
+      {isInstructor && <InstructorEnrollmentStats />}
     </div>
   );
 }
