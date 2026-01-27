@@ -114,7 +114,6 @@ export default function MarketingCourses() {
             )}
           </div>
 
-          {/* Filter Tabs */}
           <div className="mt-12 flex gap-3 flex-wrap">
             {[
               {
